@@ -1,19 +1,27 @@
 #!/bin/bash
 
 # =========================
-# update_mongo_v3.sh
+# update_mongo.sh
+# Versão: 3.0.0 (SemVer)
 # =========================
 
 set -o pipefail
 
+SCRIPT_VERSION="3.0.0"
+
+# Usuário e diretório base derivados da sessão atual (sem dados fixos do cliente)
+RUN_USER="$(id -un)"
+RUN_UID="$(id -u)"
+RUN_GID="$(id -g)"
+BASE_DIR="$HOME"
+
 # Nome do arquivo de log
-LOGFILE="/home/adm.ic48780/.update_mongo.log"
+LOGFILE="$BASE_DIR/.update_mongo.log"
 
 # Variáveis do pacote alvo
 TARGET_VERSION="7.0.37"
 ZIP_FILE="MongoDB_7.0.37_E_RHEL8.zip"
 UNZIP_DIR="MongoDB_7.0.37_E_RHEL8"
-BASE_DIR="/home/adm.ic48780"
 
 # Caminho absoluto do script (para auto-delete no final, se ok)
 SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
@@ -31,23 +39,15 @@ run_cmd() {
     fi
 }
 
-echo "===== Início da execução: $(date) =====" | tee -a "$LOGFILE"
-
-# (2) Descobre UID/GID reais do usuário antes do chown
-ADM_UID="$(id -u adm.ic48780 2>/dev/null)"
-ADM_GID="$(id -g adm.ic48780 2>/dev/null)"
-
-if [[ -z "$ADM_UID" || -z "$ADM_GID" ]]; then
-    echo "ERRO: não foi possível obter UID/GID do usuário adm.ic48780 (usuário existe?). Abortando." | tee -a "$LOGFILE"
-    exit 1
-fi
+echo "===== update_mongo.sh v${SCRIPT_VERSION} - Início da execução: $(date) =====" | tee -a "$LOGFILE"
+echo "Executando como usuário: $RUN_USER (uid=$RUN_UID gid=$RUN_GID), BASE_DIR=$BASE_DIR" | tee -a "$LOGFILE"
 
 run_cmd "mkdir -p $BASE_DIR"
-run_cmd "chown ${ADM_UID}:${ADM_GID} $BASE_DIR -R"
+run_cmd "chown ${RUN_UID}:${RUN_GID} $BASE_DIR -R"
 run_cmd "cd $BASE_DIR"
 
 # Se o wget falhar (ex.: 404), o script para aqui
-run_cmd "wget https://repository.getnet.com.br/binarios/mongodb/enterprise/$ZIP_FILE"
+run_cmd "wget https://repository.client.com.br/binarios/mongodb/enterprise/$ZIP_FILE"
 
 # Para evitar abortar por causa do 'systemctl status' com serviço parado, deixamos status não-fatal aqui
 run_cmd "systemctl stop mongod"
@@ -56,7 +56,7 @@ run_cmd "systemctl status mongod || true"
 
 run_cmd "cd $BASE_DIR/"
 run_cmd "unzip -o $ZIP_FILE"
-run_cmd "yum --disablerepo=\"*\" localinstall ${UNZIP_DIR}/* -y"
+run_cmd "yum localinstall ${UNZIP_DIR}/* -y"
 
 run_cmd "systemctl start mongod"
 run_cmd "systemctl enable mongod"
@@ -72,7 +72,7 @@ run_cmd "cat /dev/null > /var/log/mongodb/mongod.log"
 run_cmd "rm -f /var/log/mongodb/mongod.log.* /etc/mongod.conf.rpmnew"
 run_cmd "rm -rf $BASE_DIR/MongoDB_*"
 
-# (1) Valida versão instalada e, se OK, remove o próprio script no final
+# Valida versão instalada e, se OK, remove o próprio script no final
 INSTALLED_VERSION="$(mongod --version 2>/dev/null | head -n 1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
 
 if [[ "$INSTALLED_VERSION" == "$TARGET_VERSION" ]]; then
@@ -85,7 +85,7 @@ fi
 
 # Assinatura final
 run_cmd "echo \"Atualizado para a versão \$(mongod --version | head -1) por Igor Carvalho em \$(date).\" >> $BASE_DIR/.update_info"
-run_cmd "chown ${ADM_UID}:${ADM_GID} $BASE_DIR/.update_info"
+run_cmd "chown ${RUN_UID}:${RUN_GID} $BASE_DIR/.update_info"
 
 echo "===== Fim da execução: $(date) =====" | tee -a "$LOGFILE"
 

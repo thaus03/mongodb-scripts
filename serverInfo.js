@@ -10,22 +10,15 @@ function serverInfo() {
   const versionType = buildInfoResult.modules?.[0] ?? "community";
   const memSizeGB = Math.ceil(hostInfo.system.memSizeMB / 1024);
 
-  // Mantém a "fonte" original dos hosts listados (hosts + passives)
-  const replHosts = serverStatus.repl?.hosts ?? [];
-  const replPassives = serverStatus.repl?.passives ?? [];
-  const replServers = replHosts.concat(replPassives);
-
   // Se não for replica set, não há rs.status()
   const members = serverStatus.repl?.setName ? (rs.status().members ?? []) : [];
 
-  // Mapa rápido name -> stateStr
-  const stateByName = new Map(members.map(m => [m.name, m.stateStr]));
-
-  // Retorna exatamente o mesmo conjunto de "servers" (hosts+passives),
-  // mas enriquecido com stateStr quando existir
-  const servers = replServers.map(name => ({
-    name,
-    stateStr: stateByName.get(name) ?? null
+  // rs.status().members é a fonte completa dos membros do replica set,
+  // ao contrário de serverStatus.repl.hosts/passives (dados de discovery
+  // para drivers), que omitem membros hidden e não incluem árbitros
+  const servers = members.map(m => ({
+    name: m.name,
+    stateStr: m.stateStr
   }));
 
   return {

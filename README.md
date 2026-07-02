@@ -28,7 +28,7 @@ Script para o `mongosh` que coleta um resumo do estado do servidor MongoDB.
 - Reúne informações de `serverStatus`, `hostInfo`, `buildInfo` e `featureCompatibilityVersion`.
 - Identifica a edição (Community/Enterprise), versão, uptime e horário local do host.
 - Detalha recursos do host (núcleos de CPU, memória em GB, sistema operacional).
-- Caso o servidor faça parte de um replica set, lista os membros (`hosts` + `passives`) com seu `stateStr` atual.
+- Caso o servidor faça parte de um replica set, lista todos os membros (via `rs.status()`, incluindo hidden e árbitros) com seu `stateStr` atual.
 
 **Uso:**
 ```bash

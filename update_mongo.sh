@@ -56,7 +56,7 @@ run_cmd "systemctl status mongod || true"
 
 run_cmd "cd $BASE_DIR/"
 run_cmd "unzip -o $ZIP_FILE"
-run_cmd "yum --disablerepo="*" localinstall ${UNZIP_DIR}/* -y"
+run_cmd "yum --disablerepo=\"*\" localinstall ${UNZIP_DIR}/* -y"
 
 run_cmd "systemctl start mongod"
 run_cmd "systemctl enable mongod"

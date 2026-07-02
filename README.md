@@ -21,7 +21,7 @@ Automatiza a atualização do MongoDB (edição Enterprise) em servidores RHEL 8
 ./update_mongo.sh
 ```
 
-### `serverInfo.js`
+### `serverInfo.js` (v1.0.1)
 
 Script para o `mongosh` que coleta um resumo do estado do servidor MongoDB.
 

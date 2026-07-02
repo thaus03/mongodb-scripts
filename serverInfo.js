@@ -1,4 +1,5 @@
 function serverInfo() {
+  // Versão: 1.0.1
   const serverStatus = db.serverStatus();
   const hostInfo = db.hostInfo();
   const buildInfoResult = db.runCommand({ buildInfo: 1 });

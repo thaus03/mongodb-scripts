@@ -1,6 +1,8 @@
 # mongodb-scripts
 
-Coleção de scripts para operação e manutenção de instâncias MongoDB.
+[![CI](https://github.com/thaus03/mongodb-scripts/actions/workflows/ci.yml/badge.svg)](https://github.com/thaus03/mongodb-scripts/actions/workflows/ci.yml)
+
+Coleção de scripts para operação e manutenção de instâncias MongoDB. Cada push/PR na `master` é validado pelo GitHub Actions (sintaxe dos scripts, ShellCheck e a suíte de testes).
 
 ## Testes
 

@@ -2,6 +2,14 @@
 
 Coleção de scripts para operação e manutenção de instâncias MongoDB.
 
+## Testes
+
+Testes de lógica pura (executáveis fora de um servidor real) ficam em `tests/`:
+
+```bash
+bash tests/test_detect_rhel.sh
+```
+
 ## Scripts
 
 ### `update_mongo.sh` (v3.1.0)

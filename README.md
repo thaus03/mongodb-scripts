@@ -4,14 +4,14 @@ Coleção de scripts para operação e manutenção de instâncias MongoDB.
 
 ## Scripts
 
-### `update_mongo.sh` (v3.0.0)
+### `update_mongo.sh` (v3.0.1)
 
-Automatiza a atualização do MongoDB (edição Enterprise) em servidores RHEL 8.
+Automatiza a atualização do MongoDB (edição Enterprise) em servidores RHEL 7 e 8.
 
 - Baixa o pacote da versão alvo a partir do repositório interno.
 - Usa o usuário e o diretório home da sessão atual (`id`, `$HOME`) como base de execução, sem dados fixos de cliente.
 - Para, atualiza e reinicia o serviço `mongod` via `yum localinstall`.
-- Remove o `mongodb-org-shell` e faz limpeza de cache (`yum`/`dnf`) e logs antigos.
+- Remove o `mongodb-org-shell` e faz limpeza de cache (`yum`, além do `dnf` quando disponível) e logs antigos.
 - Valida a versão instalada ao final; se corresponder à versão alvo, registra a atualização em `.update_info` e remove o próprio script.
 - Interrompe a execução no primeiro comando que falhar, com log detalhado em `$HOME/.update_mongo.log`.
 - Versionamento do script segue [SemVer](https://semver.org/).
@@ -33,4 +33,17 @@ Script para o `mongosh` que coleta um resumo do estado do servidor MongoDB.
 **Uso:**
 ```bash
 mongosh --file serverInfo.js
+```
+
+### `resume.js` (v1.0.1)
+
+Função para o `mongosh` que retorna um resumo enxuto do replica set.
+
+- Define a função `resume()`, que devolve o nome do replica set e a lista de membros.
+- Para cada membro traz `_id`, host, `stateStr` atual e a prioridade configurada.
+- Casa os dados de `rs.status()` e `rs.conf()` por `_id` (não por índice do array), já que as duas chamadas não garantem a mesma ordem dos membros.
+
+**Uso:**
+```bash
+mongosh --eval 'load("resume.js"); printjson(resume())'
 ```

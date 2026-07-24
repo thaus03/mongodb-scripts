@@ -4,11 +4,13 @@ Coleção de scripts para operação e manutenção de instâncias MongoDB.
 
 ## Testes
 
-Testes de lógica pura (executáveis fora de um servidor real) ficam em `tests/`:
+Testes de lógica pura (executáveis fora de um servidor real) ficam em `tests/`. Para rodar a suíte:
 
 ```bash
-bash tests/test_detect_rhel.sh
+for t in tests/*.sh; do bash "$t"; done
 ```
+
+Os testes de scripts `mongosh` (JS) usam Node; onde o Node não está disponível, o teste é pulado com aviso em vez de falhar.
 
 ## Scripts
 
@@ -30,14 +32,15 @@ Automatiza a atualização do MongoDB (edição Enterprise) em servidores RHEL 7
 ./update_mongo.sh
 ```
 
-### `serverInfo.js` (v1.0.1)
+### `serverInfo.js` (v1.1.0)
 
-Script para o `mongosh` que coleta um resumo do estado do servidor MongoDB.
+Script para o `mongosh` que coleta um resumo do estado do servidor MongoDB. Costuma ser executado após o `update_mongo.sh` para validar que a instância subiu corretamente.
 
 - Reúne informações de `serverStatus`, `hostInfo`, `buildInfo` e `featureCompatibilityVersion`.
 - Identifica a edição (Community/Enterprise), versão, uptime e horário local do host.
 - Detalha recursos do host (núcleos de CPU, memória em GB, sistema operacional).
-- Caso o servidor faça parte de um replica set, lista todos os membros (via `rs.status()`, incluindo hidden e árbitros) com seu `stateStr` atual.
+- Informa o tipo de implantação em `deploymentType` (`standalone` ou `replicaSet`).
+- Em replica set, lista todos os membros em `servers` (via `rs.status()`, incluindo hidden e árbitros) com seu `stateStr` atual, além do `replicaSetName`. Em **standalone** esses dois campos são **omitidos**, pois não se aplicam.
 
 **Uso:**
 ```bash

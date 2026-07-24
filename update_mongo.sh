@@ -2,12 +2,12 @@
 
 # =========================
 # update_mongo.sh
-# Versão: 3.0.0 (SemVer)
+# Versão: 3.1.0 (SemVer)
 # =========================
 
 set -o pipefail
 
-SCRIPT_VERSION="3.0.1"
+SCRIPT_VERSION="3.1.0"
 
 # Usuário e diretório base derivados da sessão atual (sem dados fixos do cliente)
 RUN_USER="$(id -un)"
@@ -18,10 +18,34 @@ BASE_DIR="$HOME"
 # Nome do arquivo de log
 LOGFILE="$BASE_DIR/.update_mongo.log"
 
-# Variáveis do pacote alvo
+# Detecta a versão major do RHEL do servidor atual.
+# Necessário para clusters mistos (RHEL7 e RHEL8 no mesmo replica set): cada
+# servidor precisa baixar o binário correspondente à sua versão.
+# Pode ser sobrescrito exportando RHEL_MAJOR antes de rodar o script.
+detect_rhel_major() {
+    local ver=""
+    # Fonte primária: VERSION_ID de /etc/os-release (ex.: "7.9", "8.6") -> pega o major
+    if [[ -r /etc/os-release ]]; then
+        ver="$(. /etc/os-release 2>/dev/null; echo "${VERSION_ID%%.*}")"
+    fi
+    # Fallback: /etc/redhat-release (ex.: "... release 7.9 (Maipo)")
+    if [[ -z "$ver" && -r /etc/redhat-release ]]; then
+        ver="$(grep -oE 'release [0-9]+' /etc/redhat-release | grep -oE '[0-9]+')"
+    fi
+    echo "$ver"
+}
+
+RHEL_MAJOR="${RHEL_MAJOR:-$(detect_rhel_major)}"
+if [[ ! "$RHEL_MAJOR" =~ ^[0-9]+$ ]]; then
+    echo "ERRO: não foi possível detectar a versão do RHEL deste servidor." | tee -a "$LOGFILE"
+    echo "      Verifique /etc/os-release ou defina manualmente com: export RHEL_MAJOR=7 (ou 8)" | tee -a "$LOGFILE"
+    exit 1
+fi
+
+# Variáveis do pacote alvo (nome do binário montado a partir do RHEL detectado)
 TARGET_VERSION="7.0.37"
-ZIP_FILE="MongoDB_7.0.37_E_RHEL8.zip"
-UNZIP_DIR="MongoDB_7.0.37_E_RHEL8"
+ZIP_FILE="MongoDB_${TARGET_VERSION}_E_RHEL${RHEL_MAJOR}.zip"
+UNZIP_DIR="MongoDB_${TARGET_VERSION}_E_RHEL${RHEL_MAJOR}"
 
 # Caminho absoluto do script (para auto-delete no final, se ok)
 SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
@@ -41,6 +65,7 @@ run_cmd() {
 
 echo "===== update_mongo.sh v${SCRIPT_VERSION} - Início da execução: $(date) =====" | tee -a "$LOGFILE"
 echo "Executando como usuário: $RUN_USER (uid=$RUN_UID gid=$RUN_GID), BASE_DIR=$BASE_DIR" | tee -a "$LOGFILE"
+echo "RHEL detectado: $RHEL_MAJOR | Pacote alvo: $ZIP_FILE" | tee -a "$LOGFILE"
 
 run_cmd "mkdir -p $BASE_DIR"
 run_cmd "chown ${RUN_UID}:${RUN_GID} $BASE_DIR -R"

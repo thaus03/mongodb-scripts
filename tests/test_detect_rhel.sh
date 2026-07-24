@@ -22,6 +22,9 @@ TARGET_SCRIPT="$SCRIPT_DIR/update_mongo.sh"
 detect_rhel_major() {
     local osrel="$1" rhrel="$2" ver=""
     if [[ -r "$osrel" ]]; then
+        # Caminho de source dinâmico é proposital: aponta para os-release de
+        # teste. ShellCheck não consegue segui-lo (SC1090), então desabilitamos.
+        # shellcheck disable=SC1090
         ver="$(. "$osrel" 2>/dev/null; echo "${VERSION_ID%%.*}")"
     fi
     if [[ -z "$ver" && -r "$rhrel" ]]; then

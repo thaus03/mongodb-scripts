@@ -4,10 +4,11 @@ Coleção de scripts para operação e manutenção de instâncias MongoDB.
 
 ## Scripts
 
-### `update_mongo.sh` (v3.0.1)
+### `update_mongo.sh` (v3.1.0)
 
 Automatiza a atualização do MongoDB (edição Enterprise) em servidores RHEL 7 e 8.
 
+- Detecta automaticamente a versão major do RHEL do servidor (via `/etc/os-release`, com fallback para `/etc/redhat-release`) e baixa o binário correspondente (`MongoDB_<versão>_E_RHEL<major>.zip`). Isso permite rodar o mesmo script em clusters mistos (RHEL 7 e 8). A detecção pode ser sobrescrita com `export RHEL_MAJOR=7` (ou `8`) antes da execução.
 - Baixa o pacote da versão alvo a partir do repositório interno.
 - Usa o usuário e o diretório home da sessão atual (`id`, `$HOME`) como base de execução, sem dados fixos de cliente.
 - Para, atualiza e reinicia o serviço `mongod` via `yum localinstall`.

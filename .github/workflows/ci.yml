@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  validar:
+    name: Validar scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar sintaxe dos scripts .sh (bash -n)
+        run: |
+          shopt -s globstar nullglob
+          falhou=0
+          for f in **/*.sh; do
+            echo ">> bash -n $f"
+            if ! bash -n "$f"; then
+              echo "ERRO de sintaxe em $f"
+              falhou=1
+            fi
+          done
+          exit $falhou
+
+      - name: Análise estática com ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+
+      - name: Rodar testes (tests/*.sh)
+        run: |
+          shopt -s nullglob
+          testes=(tests/*.sh)
+          if [[ ${#testes[@]} -eq 0 ]]; then
+            echo "Nenhum teste em tests/ — nada a rodar."
+            exit 0
+          fi
+          falhou=0
+          for t in "${testes[@]}"; do
+            echo ">> $t"
+            if ! bash "$t"; then
+              echo "FALHA em $t"
+              falhou=1
+            fi
+          done
+          exit $falhou
+
+      - name: Empacotar scripts (artefato de teste da PR)
+        run: |
+          mkdir -p dist
+          cp *.sh *.js README.md dist/ 2>/dev/null || true
+          ls -l dist/
+
+      - name: Publicar artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: mongodb-scripts
+          path: dist/

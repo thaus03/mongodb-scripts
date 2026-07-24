@@ -7,7 +7,7 @@
 
 set -o pipefail
 
-SCRIPT_VERSION="3.0.0"
+SCRIPT_VERSION="3.0.1"
 
 # Usuário e diretório base derivados da sessão atual (sem dados fixos do cliente)
 RUN_USER="$(id -un)"
@@ -66,7 +66,12 @@ run_cmd "systemctl status mongod"
 run_cmd "yum remove mongodb-org-shell* -y || true"
 
 # Housekeeping
-run_cmd "dnf clean all"
+# dnf só existe no RHEL8+; no RHEL7 apenas o yum está disponível.
+# Executamos o dnf clean all apenas se o binário existir, preservando o
+# tratamento de erro do run_cmd quando ele de fato estiver presente.
+if command -v dnf >/dev/null 2>&1; then
+    run_cmd "dnf clean all"
+fi
 run_cmd "yum clean all"
 run_cmd "cat /dev/null > /var/log/mongodb/mongod.log"
 run_cmd "rm -f /var/log/mongodb/mongod.log.* /etc/mongod.conf.rpmnew"
